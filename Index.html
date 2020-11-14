@@ -1,0 +1,300 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Learn to Multiply</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="bootstrap.min.css" />
+</head>
+<body>
+    <div class="container">
+        <div id="growler">
+            <div class="container">
+                <div class="panel panel-warning">
+                    <div class="panel-heading">
+                        <h1>Learn to Multiply</h1>
+						<!-- img src="chicks.jpg" -->
+                    </div>
+
+                    <div class="panel-body">
+						<div class="row">
+							<div class="col-sm-8">
+								<!-- start -->
+								<div v-if="stage == 0">
+									<div class="row">
+										<div class="col-sm-12">
+											<input v-model="name" placeholder="Enter your name...">
+										</div>
+									</div>
+
+									<div class="row">
+										<div class="col-sm-12">
+											<ul class="list-inline">
+												<li v-for="(numb, index) in numbers" class="page-item">
+													<label class="form-check-label">
+														<input class="form-check-input" type="checkbox" v-model="numb.selected">
+														{{numb.number}}
+													</label>
+												</li>
+												<li>
+													<button class="btn" v-on:click="onSelectAll">All</button>
+												</li>
+											</ul>
+										</div>
+									</div>
+									
+									<div class="row">
+									<div class="col-sm-12">
+										<button class="btn btn-primary" v-on:click="onStart" style="width: 200px">Start</button>
+										</div>
+									</div>
+								</div>
+
+								<!-- play -->
+								<div v-if="stage == 1">
+									<div class="row">
+										<div class="col-sm-6">
+											<span style="font-size: large;text-align:right">
+												{{name || 'Kid'}} what is <b style="color: red">{{left}} x {{right}} = ? </b>
+											</span>
+										</div>
+										<div class="col-sm-6">
+											<ul class="list-inline">
+												<li v-for="(opt, index) in options" class="page-item">
+													<button v-on:click="clickSolution(index);" v-bind:class="{ 'btn': true, 'btn-primary': waiting, 'btn-success': !waiting && isCorrectSolution(index)}" :disabled="!waiting">{{ opt }}</button>
+												</li>
+											</ul>
+										</div>
+									</div>
+									<div class="row">
+										<div class="col-sm-12">
+											Problems: {{progress()}}
+										</div>
+									</div>
+
+								</div>
+
+								<!-- score -->
+								<div v-if="stage == 2">
+									<span style="font-size: xx-large;text-align:right">
+										{{name || 'Kid'}} your score is: <b style="color: red">{{ score }}</b> are you happy?
+									</span>
+									<br />
+									<button class="btn btn-primary" v-on:click="onStart" style="width: 200px">Play Again</button>
+								</div>
+								
+						</div>
+							<div class="col-sm-4">
+								<img src="chicks.png">
+							</div>
+						</div>
+					
+                    </div>
+                </div>
+            </div>
+		</div>
+    </div>
+
+    <script src="https://unpkg.com/vue@2.2.5/dist/vue.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        var growler = new Vue({
+            el: '#growler',
+            data: {
+                name: "",
+                stage: 0,
+                numbers: [
+                    {
+                        number: 2,
+                        selected: true
+                    },
+                    {
+                        number: 3,
+                        selected: false
+                    },
+                    {
+                        number: 4,
+                        selected: false
+                    },
+                    {
+                        number: 5,
+                        selected: true
+                    },
+                    {
+                        number: 6,
+                        selected: false
+                    },
+                    {
+                        number: 7,
+                        selected: false
+                    },
+                    {
+                        number: 8,
+                        selected: false
+                    },
+                    {
+                        number: 9,
+                        selected: false
+                    },
+                ],
+                selectedNumbers: [],
+                left: 2,
+                right: 3,
+                history: [],
+                optionCount: 3,
+                options: [4, 5, 6],
+                solutionIndex: 0,
+                waiting: false,
+                testCount: 20,
+                score: '?'
+            },
+            methods: {
+                onStart: function () {
+                    var selected = this.numbers.filter(function (item) {
+                        return item.selected;
+                    }).map(function (item) {
+                        return item.number;
+                    });
+                    this.selectedNumbers = selected;
+                    this.stage = 1;
+                    this.history = [];
+                    this.generateProblem();
+                },
+
+                onSelectAll: function () {
+                    this.numbers.forEach(function (item) {
+                        item.selected = true;
+                    });
+                },
+
+                getLeftValue: function () {
+                    var index = Math.floor(Math.random() * this.selectedNumbers.length);
+                    return this.selectedNumbers[index];
+                },
+
+                getRightValue: function () {
+                    return this.getRandomOf(10);
+                },
+
+                generateProblem: function () {
+                    var count = 0;
+                    do {
+                        this.left = this.getLeftValue();
+                        this.right = this.getRightValue();
+                    } while (++count < 100 && !this.isNewProblem(this.left, this.right))
+
+                    var solution = this.left * this.right;
+					
+					var s2 = solution + this.getRandomOf(5);
+					var s3 = solution - this.getRandomOf(5);
+                    this.options = this.shuffleArray([solution, s2, s3 >= 0 ? s3 : -s3]);
+                    this.solutionIndex = this.options.indexOf(solution);
+                    this.waiting = true;
+                },
+
+                shuffleArray: function (array) {
+                    var len = array.length;
+                    var shuffled = [];
+                    array.forEach(function (v) {
+                        shuffled.push(v);
+                    });
+                    for (var i = 0; i < this.getRandomOf(100) ; i++) {
+                        var p = this.getRandomOf(len - 1);
+                        var aux = shuffled[p - 1];
+                        shuffled[p - 1] = shuffled[p];
+                        shuffled[p] = aux;
+                    }
+                    return shuffled;
+                },
+
+                getRandomOf: function (number) {
+                    return 1 + Math.floor(Math.random() * number);
+                },
+
+                isNewProblem: function (left, right) {
+                    var matches = this.history.filter(function (item) {
+                        return item.left === left && item.right === right;
+                    });
+                    return !matches.length;
+                },
+
+                clickSolution: function (index) {
+                    if (!this.waiting)
+                        return;
+
+                    this.waiting = false;
+
+                    this.history.push({
+                        left: this.left,
+                        right: this.right,
+                        passed: this.isCorrectSolution(index)
+                    });
+
+                    if (this.testCompleted()) {
+                        // go the evaluation stage
+                        this.score = this.calcScore();
+                        this.stage = 2;
+                    } else {
+                        var self = this;
+                        var waitTime = !this.isCorrectSolution(index) ? 2500 : 500;
+                        setTimeout(function () {
+                            self.generateProblem();
+                        }, waitTime);
+                    }
+                },
+
+                isCorrectSolution: function (index) {
+                    return index === this.solutionIndex;
+                },
+
+                progress: function() {
+					return this.history.length + "/" + this.testCount;
+				},
+				
+				testCompleted: function () {
+                    return this.history.length === this.testCount;
+                },
+
+                calcScore: function () {
+                    var total = this.history.length || 1;
+                    var passed = this.history.filter(function (item) {
+                        return item.passed;
+                    });
+                    var passedCount = passed ? passed.length : 0;
+                    var score = 100.0 * (passedCount / total);
+
+                    if (score === 100.0)
+                        return 'A+';
+
+                    if (score >= 94.0)
+                        return 'A';
+
+                    if (score >= 90)
+                        return 'A-';
+
+                    if (score >= 85)
+                        return 'B+';
+
+                    if (score >= 80)
+                        return 'B';
+
+                    if (score >= 75)
+                        return 'B-';
+
+                    if (score >= 70)
+                        return 'C+';
+
+                    if (score >= 65)
+                        return 'C-';
+
+                    if (score >= 60)
+                        return 'C';
+
+                    return 'D';
+                }
+            }
+        });
+    </script>
+
+</body>
+
+</html>
